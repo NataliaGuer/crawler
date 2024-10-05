@@ -1,0 +1,3 @@
+[submodule "fetcher"]
+	path = fetcher
+	url = https://github.com/NataliaGuer/crawler-fetcher.git
