@@ -6,17 +6,66 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
     restart: always
+    volumes:
+      - db-data:/etc/data
   
   fetcher:
     build: ./fetcher
     ports: 
       - "3000:3000"
-    volumes:
-      - ./fetcher:/home/app
+    # volumes:
+    #   - .:/home/app
+    #   - /home/app/node_modules
+    #   - /home/app/dist
     environment:
       - DATABASE_URL=mysql://root:root@db:3306/content
+      - QUEUE=crawler-queue
+      - MESSAGE_QUEUE=amqp://rabbitmq
+    links:
+      - rabbitmq
     depends_on:
       db:
         condition: service_started
-
+      broker:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy 
+    networks:
+      - app-network
   
+  broker:
+    build: ./broker
+    ports:
+      - "3001:3001"
+    environment:
+      - MESSAGE_QUEUE=amqp://rabbitmq
+      - QUEUE=crawler-queue
+    links:
+      - rabbitmq
+    # volumes:
+    #   - ./broker:/home/app
+    networks:
+      - app-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3.7.4
+    networks:
+      - app-network
+    ports:
+      - "5672:5672"  # AMQP protocol port
+      - "15672:15672"  # Management UI port
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmqctl status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  db-data:
+
+networks:
+  app-network:
+    driver: bridge
