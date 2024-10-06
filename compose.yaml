@@ -11,6 +11,8 @@ services:
     build: ./fetcher
     ports: 
       - "3000:3000"
+    volumes:
+      - ./fetcher:/home/app
     environment:
       - DATABASE_URL=mysql://root:root@db:3306/content
     depends_on:
