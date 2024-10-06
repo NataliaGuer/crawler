@@ -1,6 +1,6 @@
 [submodule "fetcher"]
 	path = fetcher
 	url = https://github.com/NataliaGuer/crawler-fetcher.git
-[submodule "broker"]
-	path = broker
+[submodule "crawler-broker"]
+	path = crawler-broker
 	url = https://github.com/NataliaGuer/crawler-broker.git
