@@ -7,25 +7,31 @@ services:
       - MYSQL_ROOT_PASSWORD=root
     restart: always
     volumes:
-      - db-data:/etc/data
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - app-network
   
   fetcher:
     build: ./fetcher
     ports: 
       - "3000:3000"
-    # volumes:
-    #   - .:/home/app
-    #   - /home/app/node_modules
-    #   - /home/app/dist
+    volumes:
+      - ./fetcher:/home/app
     environment:
       - DATABASE_URL=mysql://root:root@db:3306/content
-      - QUEUE=crawler-queue
+      - BROKER_QUEUE=broker-queue
+      - FETCHER_QUEUE=fetcher-queue
       - MESSAGE_QUEUE=amqp://rabbitmq
     links:
       - rabbitmq
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
       broker:
         condition: service_started
       rabbitmq:
@@ -34,20 +40,24 @@ services:
       - app-network
   
   broker:
-    build: ./broker
+    build: ./crawler-broker
     ports:
       - "3001:3001"
     environment:
+      - DATABASE_URL=mysql://root:root@db:3306/content
       - MESSAGE_QUEUE=amqp://rabbitmq
-      - QUEUE=crawler-queue
+      - BROKER_QUEUE=broker-queue
+      - FETCHER_QUEUE=fetcher-queue
     links:
       - rabbitmq
-    # volumes:
-    #   - ./broker:/home/app
+    volumes:
+      - ./crawler-broker:/home/app
     networks:
       - app-network
     depends_on:
       rabbitmq:
+        condition: service_healthy
+      db:
         condition: service_healthy
 
   rabbitmq:
@@ -65,6 +75,7 @@ services:
 
 volumes:
   db-data:
+  node_modules:
 
 networks:
   app-network:
