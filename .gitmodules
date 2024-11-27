@@ -4,3 +4,6 @@
 [submodule "crawler-broker"]
 	path = crawler-broker
 	url = https://github.com/NataliaGuer/crawler-broker.git
+[submodule "crawler-view"]
+	path = crawler-view
+	url = https://github.com/NataliaGuer/crawler-view.git
