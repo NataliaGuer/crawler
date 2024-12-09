@@ -22,6 +22,7 @@ services:
       - "3000:3000"
     volumes:
       - ./fetcher:/home/app
+      - /home/app/node_modules
     environment:
       - DATABASE_URL=mysql://root:root@db:3306/content
       - BROKER_QUEUE=broker-queue
@@ -52,6 +53,7 @@ services:
       - rabbitmq
     volumes:
       - ./crawler-broker:/home/app
+      - /home/app/node_modules
     networks:
       - app-network
     depends_on:
@@ -61,7 +63,7 @@ services:
         condition: service_healthy
 
   rabbitmq:
-    image: rabbitmq:3.7.4
+    image: rabbitmq:3-management
     networks:
       - app-network
     ports:
@@ -72,10 +74,36 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+  
+  view:
+    build: ./crawler-view
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./crawler-view:/home/app
+      - /home/app/node_modules
+    networks:
+      - app-network
+
+  api:
+    build: ./crawler-api
+    ports:
+      - "3002:3000"
+    environment:
+      - DATABASE_URL=mysql://root:root@db:3306/content
+      - MESSAGE_QUEUE=amqp://rabbitmq
+      - BROKER_QUEUE=broker-queue
+    volumes:
+      - ./crawler-api:/home/app
+      - /home/app/node_modules
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   db-data:
-  node_modules:
 
 networks:
   app-network:

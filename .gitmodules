@@ -7,3 +7,6 @@
 [submodule "crawler-view"]
 	path = crawler-view
 	url = https://github.com/NataliaGuer/crawler-view.git
+[submodule "crawler-api"]
+	path = crawler-api
+	url = https://github.com/NataliaGuer/crawler-api.git
